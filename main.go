@@ -6,49 +6,40 @@ import (
 	"time"
 )
 
-type record struct {
-	address   string
-	responses []httpResponse
-}
+const interval = 5 // in minutes
 
-type httpResponse struct {
-	dateTime time.Time
-	status   int
-}
+var record Record
 
-func (r *record) update(status int) {
-	resp := httpResponse{
-		dateTime: time.Now(),
-		status:   status,
-	}
-	r.responses = append(r.responses, resp)
-}
-
-func getStatus(r *record) {
-	resp, err := http.Get(r.address)
-
+func getStatus(r *Record) {
+	resp, err := http.Get(r.Address)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	if resp.StatusCode != 200 {
-		log.Printf("Uh-Oh!\nwww.justice-defenders.org appears to be down.\n%v", resp.StatusCode)
-	} else {
-		log.Printf("Success!\nwww.justice-defenders.org is live!\n%v", resp.StatusCode)
+		log.Printf("Uh-Oh! %v appears to be down. Response code: %v\n", r.Address, resp.StatusCode)
 	}
 
-	r.update(resp.StatusCode)
+	r.update(resp.StatusCode, interval)
+}
+
+func loop(r *Record) {
+	ticker := time.NewTicker(interval * time.Second)
+	for range ticker.C {
+		getStatus(r)
+	}
+}
+
+func init() {
+	record = Record{
+		Address:    "https://www.justice-defenders.org/",
+		Last30Days: make([]DayRecord, 1, 30),
+	}
 }
 
 func main() {
-	record := record{
-		address: "https://www.justice-defenders.org/",
-	}
 	getStatus(&record)
-
-	ticker := time.NewTicker(5 * time.Second)
-
-	for _ = range ticker.C {
-		getStatus(&record)
-	}
+	go loop(&record)
+	http.HandleFunc("/", index)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
