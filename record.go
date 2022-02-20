@@ -27,7 +27,7 @@ type HttpResponse struct {
 func (r *Record) update(status int, interval time.Duration) {
 	var todaysRecord DayRecord
 	// check whether it's a new day or not
-	if !time.Now().Truncate(60 * time.Second).Equal(time.Now().Add(time.Duration(-interval) * time.Minute).Truncate(60 * time.Second)) {
+	if !time.Now().Truncate(24 * time.Hour).Equal(time.Now().Add(time.Duration(-interval) * time.Minute).Truncate(24 * time.Hour)) {
 		if len(r.Last30Days) >= 30 {
 			r.respCount = r.respCount - len(r.Last30Days[0].Responses)   // update response counter
 			r.pingCount = r.pingCount - r.Last30Days[0].pingCount        // update ping counter
