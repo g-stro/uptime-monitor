@@ -40,6 +40,5 @@ func init() {
 func main() {
 	getStatus(&record)
 	go loop(&record)
-	http.HandleFunc("/", index)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
