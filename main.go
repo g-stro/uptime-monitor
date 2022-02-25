@@ -1,14 +1,23 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 const interval = 5 // in minutes
 
 var record Record
+var config configuration
+
+type configuration struct {
+	Url  string
+	Port int
+}
 
 func getStatus(r *Record) {
 	resp, err := http.Get(r.Address)
@@ -31,8 +40,18 @@ func loop(r *Record) {
 }
 
 func init() {
+	contents, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = json.Unmarshal(contents, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	record = Record{
-		Address:    "https://www.justice-defenders.org/",
+		Address:    config.Url,
 		Last30Days: make([]DayRecord, 1, 30),
 	}
 }
@@ -40,5 +59,5 @@ func init() {
 func main() {
 	getStatus(&record)
 	go loop(&record)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Port), nil))
 }
