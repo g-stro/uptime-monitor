@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,8 +16,15 @@ var record Record
 var config configuration
 
 type configuration struct {
-	Url  string
-	Port int
+	// http server config
+	Url      string
+	HttpPort int
+	// smtp config
+	SmptHost   string
+	SmtpPort   int
+	Sender     string
+	SenderPass string
+	Recipients []string
 }
 
 func getStatus(r *Record) {
@@ -26,7 +34,12 @@ func getStatus(r *Record) {
 	}
 
 	if resp.StatusCode != 200 {
-		log.Printf("Uh-Oh! %v appears to be down. Response code: %v\n", r.Address, resp.StatusCode)
+		// send mail to recipients
+		msg := fmt.Sprintf("Subject: Monitoring - %v\r\nUh-Oh!\r\n\r\n"+
+			"%v responded with status code %v when performing monitoring.",
+			config.Url, config.Url, resp.StatusCode)
+		SendMail(msg)
+		log.Printf("Uh-Oh! %v appears to be down. Status code: %v\n", r.Address, resp.StatusCode)
 	}
 
 	r.update(resp.StatusCode, interval)
@@ -59,5 +72,5 @@ func init() {
 func main() {
 	getStatus(&record)
 	go loop(&record)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Port), nil))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.HttpPort), nil))
 }

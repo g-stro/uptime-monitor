@@ -1,4 +1,10 @@
 {
-    "Url": "https://{DOMAIN}",
-    "Port": {PORT}
+    "Url":          "https://{Domain}",
+    "HttpPort":     {HttpPort},
+
+    "SmptHost":     "{SmtpServer}",
+    "SmtpPort":     {SmtpPort},
+    "Sender":       "{SenderEmailAddr}",
+	"SenderPass":   "{SenderPassword}",
+	"Recipients":   ["{RecipientEmail1}", "{RecipientEmail2}"]
 }
