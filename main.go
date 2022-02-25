@@ -46,7 +46,7 @@ func getStatus(r *Record) {
 }
 
 func loop(r *Record) {
-	ticker := time.NewTicker(interval * time.Second)
+	ticker := time.NewTicker(interval * time.Minute)
 	for range ticker.C {
 		getStatus(r)
 	}
